@@ -688,9 +688,9 @@ class Imexamine:
                                   int(yy - pad), int(yy + pad)], origin='lower',
                           cmap=self.aper_phot_pars['cmap'][0])
 
-                apertures.plot(ax=ax, color='green', alpha=0.75, lw=3)
+                apertures.plot(axes=ax, color='green', alpha=0.75, lw=3)
                 if subsky:
-                    annulus_apertures.plot(ax=ax, color='red', alpha=0.75, lw=3)
+                    annulus_apertures.plot(axes=ax, color='red', alpha=0.75, lw=3)
 
                 if pfig is None:
                     plt.draw()
@@ -1556,6 +1556,7 @@ class Imexamine:
         fig.clf()
         fig.add_subplot(111)
         ax = fig.gca()
+        ax.set_aspect(‘equal’, adjustable=‘box’)
 
         if self.contour_pars["title"][0] is None:
             title = f"{self._datafile} {int(x)} {int(y)}"
@@ -1599,6 +1600,8 @@ class Imexamine:
         else:
             fig.canvas.draw_idle()
 
+        ax.set_aspect(‘auto’)
+
     def surface(self, x, y, data=None, fig=None):
         """plot a surface around the specified location.
 
@@ -1622,8 +1625,7 @@ class Imexamine:
         if fig is None:
             fig = plt.figure(self._figure_name)
         fig.clf()
-        fig.add_subplot(111)
-        ax = fig.gca(projection='3d')
+        ax = fig.add_subplot(111, projection='3d')
 
         title = self.surface_pars["title"][0]
         if title is None:

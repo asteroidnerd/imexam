@@ -444,14 +444,14 @@ class Imexamine:
             data = self._data
 
         region_size = self.report_stat_pars["region_size"][0]
-        name = self.report_stat_pars["stat"][0]
+        name = self.report_stat_pars["stat"]
         dist = region_size / 2
         xmin = int(x - dist)
         xmax = int(x + dist)
         ymin = int(y - dist)
         ymax = int(y + dist)
 
-        if (("describe" in name) and (scipy_installed)):
+        if (('describe' in name) and (scipy_installed)):
             try:
                 stat = getattr(stats, "describe")
                 nobs, minmax, mean, var, skew, kurt = stat(data[ymin:ymax,
@@ -461,6 +461,10 @@ class Imexamine:
                         f"{skew}\nkurtosis: {kurt}")
             except AttributeError:
                 warnings.warn("Invalid stat specified")
+        elif (isinstance(name, list)):
+        	print (name)
+        	for statname in name:
+        		pstr = (f"{statname}")
         else:
             try:
                 stat = getattr(np, name)
@@ -680,7 +684,7 @@ class Imexamine:
                                    self.aper_phot_pars['color_max'][0]]
 
                 pad = outer * 1.2  # XXX TODO: Bad magic number
-                print(xx, yy, pad)
+#                print(xx, yy, pad)
                 ax.imshow(data[int(yy - pad):int(yy + pad),
                                int(xx - pad):int(xx + pad)],
                           vmin=color_range[0], vmax=color_range[1],
@@ -1157,7 +1161,7 @@ class Imexamine:
                 sky_per_pix = 0.
                 self.log.info("Sky background negative, setting to zero")
             self.log.info(f"Background per pixel: {sky_per_pix}")
-            flux -= sky_per_pix
+            flux = flux - sky_per_pix
 
             if getdata:
                 self.log.info(f"Sky per pixel: {sky_per_pix} using "
@@ -1185,7 +1189,7 @@ class Imexamine:
                           f"fwhm = {fwhmx:9.3f}")
                 self.log.info(legend)
                 legendx = datasize / 2
-                legendy = np.max(flux) / 2
+                legendy = np.max(flux)
 
             elif fitform.name == "Moffat1D":
                 fitted = math_helper.fit_moffat_1d(flux,
@@ -1198,7 +1202,8 @@ class Imexamine:
                           f"amp = {fitted.amplitude_0.value:9.3f}\n"
                           f"fwhm = {mfwhm:9.3f}")
                 legendx = datasize / 2
-                legendy = np.max(flux) / 2
+                legendy = np.max(flux)
+                
 
             elif fitform.name == "MexicanHat1D":
                 fitted = math_helper.fit_mex_hat_1d(flux,
@@ -1207,7 +1212,7 @@ class Imexamine:
                                                     weighted=True)
                 legend = (f"Max. pix. flux = {np.max(flux):9.3f}\n")
                 legendx = datasize / 2
-                legendy = np.max(flux) / 2
+                legendy = np.max(flux)
 
             if fitted is None:
                 msg = f"Problem with the {fitform.name} fit"
@@ -1238,7 +1243,7 @@ class Imexamine:
                 ax.plot(radius, flux, pars["marker"][0])
             else:
                 ax.plot(radius, flux)
-            ax.set_ylim(0,)
+#            ax.set_ylim(0,)
 
             if pars["title"][0] is None:
                 if fitplot:
@@ -1251,7 +1256,7 @@ class Imexamine:
             if fitplot:
                 ax.plot(fline, yfit, linestyle='-', c='r', label=fitform.name)
                 ax.set_xlim(0, datasize, 0.5)
-                ax.text(legendx, legendy, legend)
+                ax.text(legendx, legendy, legend, va='top')
 
             ax.set_title(title)
 
@@ -1556,7 +1561,7 @@ class Imexamine:
         fig.clf()
         fig.add_subplot(111)
         ax = fig.gca()
-        ax.set_aspect(‘equal’, adjustable=‘box’)
+        ax.set_aspect('equal', adjustable='box')
 
         if self.contour_pars["title"][0] is None:
             title = f"{self._datafile} {int(x)} {int(y)}"
@@ -1599,8 +1604,8 @@ class Imexamine:
             plt.pause(0.001)
         else:
             fig.canvas.draw_idle()
-
-        ax.set_aspect(‘auto’)
+            
+        ax.set_aspect('auto')
 
     def surface(self, x, y, data=None, fig=None):
         """plot a surface around the specified location.
@@ -1626,6 +1631,7 @@ class Imexamine:
             fig = plt.figure(self._figure_name)
         fig.clf()
         ax = fig.add_subplot(111, projection='3d')
+        #ax = fig.gca(projection='3d')
 
         title = self.surface_pars["title"][0]
         if title is None:

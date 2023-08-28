@@ -63,7 +63,9 @@ def mfwhm(alpha=0, gamma=0):
     return 2 * alpha * np.sqrt(2 ** (1 / gamma) - 1)
 
 
-def fit_moffat_1d(data, gamma=2., alpha=1., sigma_factor=0.,
+#def fit_moffat_1d(data, gamma=2., alpha=1., sigma_factor=0.,
+#                  center_at=None, weighted=False):
+def fit_moffat_1d(data, gamma=2.0, alpha=2.5, sigma_factor=0.,
                   center_at=None, weighted=False):
     """Fit a 1D moffat profile to the data and return the fit.
 
@@ -94,9 +96,9 @@ def fit_moffat_1d(data, gamma=2., alpha=1., sigma_factor=0.,
 
     # guesstimate mean
     if center_at:
-        x0 = 0
+        delta = int(len(radius) / 2.)
     else:
-        x0 = int(ldata / 2.)
+        delta = center_at
 
     # assumes negligible background
     if weighted:
@@ -115,11 +117,20 @@ def fit_moffat_1d(data, gamma=2., alpha=1., sigma_factor=0.,
         fit = fitter
 
     # Moffat1D + constant
-    model = (models.Moffat1D(amplitude=max(data),
-                             x_0=x0,
+    if delta==0:
+	    model = (models.Moffat1D(amplitude=max(data),
+                             x_0=delta,
                              gamma=gamma,
-                             alpha=alpha) +
+                             alpha=alpha, fixed={'x_0': True, 'alpha':True},
+                             bounds={'gamma': [1.0,5.0]}) +
              models.Polynomial1D(c0=data.min(), degree=0))
+    else:
+	    model = (models.Moffat1D(amplitude=max(data),
+                             x_0=delta,
+                             gamma=gamma,
+                             alpha=alpha,fixed={'alpha':True}) +
+             models.Polynomial1D(c0=data.min(), degree=0))
+    
 
     with warnings.catch_warnings():
         # Ignore model linearity warning from the fitter
@@ -167,7 +178,7 @@ def fit_gauss_1d(radius, flux, sigma_factor=0, center_at=None, weighted=False):
 
     # guesstimate the mean
     # assumes ordered radius
-    if center_at is None:
+    if center_at:
         delta = int(len(radius) / 2.)
     else:
         delta = center_at
@@ -187,9 +198,15 @@ def fit_gauss_1d(radius, flux, sigma_factor=0, center_at=None, weighted=False):
         fit = fitter
 
     # Gaussian1D + a constant
-    model = (models.Gaussian1D(amplitude=flux.max() - flux.min(),
+    if center_at==0:
+    	model = (models.Gaussian1D(amplitude=flux.max() - flux.min(),
+                               mean=delta, stddev=1., fixed={'mean': True}) +
+             models.Polynomial1D(c0=flux.min(), degree=0))
+    else:
+     	model = (models.Gaussian1D(amplitude=flux.max() - flux.min(),
                                mean=delta, stddev=1.) +
              models.Polynomial1D(c0=flux.min(), degree=0))
+   
 
     with warnings.catch_warnings():
         # Ignore model linearity warning from the fitter
